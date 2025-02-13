@@ -1,0 +1,84 @@
+services:
+  pipelines-raw:
+    image: ghcr.io/open-webui/pipelines:main
+    container_name: pipelines-raw-test
+    ports:
+      - "9099:9099"
+      - "5678:5678"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - pipelines-network
+    environment:
+      FLOWISE_URL: "http://flowise:3000"
+      FLOWISE_CHAT_FLOW_ID: "2f201431-0d7f-41e2-99db-9fe04aa3ae95"
+  # pipelines:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile_pipelines
+  #   image: pipelines-with-reload:latest
+  #   container_name: pipelines
+  #   ports:
+  #     - "9099:9099"
+  #     - "5678:5678"
+  #   volumes:
+  #     - ./custom-pipelines:/app/pipelines
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   networks:
+  #     - pipelines-network
+  #   environment:
+  #     FLOWISE_URL: "http://flowise:3000"
+  #     FLOWISE_CHAT_FLOW_ID: "2f201431-0d7f-41e2-99db-9fe04aa3ae95"
+
+  open-webui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:ollama
+    ports:
+      - "3000:8080"
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+      - open-webui:/app/backend/data
+    environment:
+      OPENAI_API_BASE_URL: "http://pipelines:9099"
+      OPENAI_API_KEY: "0p3n-w3bu!"
+      OLLAMA_HOST: "0.0.0.0"
+    networks:
+      - pipelines-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  flowise:
+    image: flowiseai/flowise
+    container_name: flowise
+    environment:
+      - PORT=3000
+      - DATABASE_PATH=/root/.flowise
+      - APIKEY_PATH=/root/.flowise
+      - SECRETKEY_PATH=/root/.flowise
+      - LOG_PATH=/root/.flowise/logs
+      - BLOB_STORAGE_PATH=/root/.flowise/storage
+    ports:
+      - '3001:3000'
+    networks:
+      - pipelines-network
+    volumes:
+      - flowise:/root/.flowise
+      - ./flowise-test-files:/root/flowise-test-files
+    entrypoint: /bin/sh -c "sleep 3; flowise start"
+
+volumes:
+  open-webui:
+  ollama:
+  flowise:
+
+networks:
+  pipelines-network:
+    driver: bridge
+  

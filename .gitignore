@@ -1,3 +1,6 @@
+custom-pipelines/failed
+custom-pipelines/flowise_connector
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
