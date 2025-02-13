@@ -1,10 +1,15 @@
 services:
-  pipelines-raw:
-    image: ghcr.io/open-webui/pipelines:main
-    container_name: pipelines-raw-test
+  pipelines:
+    build:
+      context: .
+      dockerfile: Dockerfile_pipelines
+    image: pipelines-with-reload:latest
+    container_name: pipelines
     ports:
       - "9099:9099"
       - "5678:5678"
+    volumes:
+      - ./custom-pipelines:/app/pipelines
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -12,24 +17,6 @@ services:
     environment:
       FLOWISE_URL: "http://flowise:3000"
       FLOWISE_CHAT_FLOW_ID: "2f201431-0d7f-41e2-99db-9fe04aa3ae95"
-  # pipelines:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile_pipelines
-  #   image: pipelines-with-reload:latest
-  #   container_name: pipelines
-  #   ports:
-  #     - "9099:9099"
-  #     - "5678:5678"
-  #   volumes:
-  #     - ./custom-pipelines:/app/pipelines
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
-  #   networks:
-  #     - pipelines-network
-  #   environment:
-  #     FLOWISE_URL: "http://flowise:3000"
-  #     FLOWISE_CHAT_FLOW_ID: "2f201431-0d7f-41e2-99db-9fe04aa3ae95"
 
   open-webui:
     container_name: open-webui
