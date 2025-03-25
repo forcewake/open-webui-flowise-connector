@@ -127,8 +127,6 @@ class Pipeline:
             )
 
             for completion_response in completion:
-                self.saveCitation(
-                    message_id, completion_response["sourceDocuments"])
                 yield completion_response["text"]
 
     async def outlet(self, body: dict, user: dict) -> dict:
@@ -136,36 +134,6 @@ class Pipeline:
             body.get("id"))
 
         return body
-
-    def saveCitation(self, message_id: str, source_documents: dict):
-        for source_document in source_documents:
-            document = {}
-
-            file_name = os.path.basename(self.getNestedValue(
-                source_document, self.valves.FLOWISE_CITATION_FILE_NAME_PATH))
-            page_number = self.getNestedValue(
-                source_document, self.valves.FLOWISE_CITATION_PAGE_NUMBER_PATH)
-            page_content = self.getNestedValue(
-                source_document, self.valves.FLOWISE_CITATION_PAGE_CONTENT_PATH)
-
-            document["document"] = [page_content]
-            document["metadata"] = [{
-                "source": f"{file_name} - {page_number}"
-            }]
-            document["source"] = {
-                "name": f"{file_name} - {self.valves.FLOWISE_CITATION_PAGE_TEXT} {page_number}"
-            }
-
-            self.citation_cache.add_citation(message_id, document)
-
-    def getNestedValue(self, data: dict, path: str, separator: str = "."):
-        keys = path.split(separator)
-        for key in keys:
-            if isinstance(data, dict):
-                data = data.get(key)
-            else:
-                return None
-        return data
 
     def userMessageStartsWith(self, user_message: str, text_to_compare: str):
         if user_message.startswith(text_to_compare):
